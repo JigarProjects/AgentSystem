@@ -1,0 +1,28 @@
+---
+- name: updating repository
+  apt:
+      name: unzip
+      update_cache: yes
+
+- name: download consul 0.9.0 binary
+  get_url:
+      url: https://releases.hashicorp.com/consul/0.9.0/consul_0.9.0_linux_amd64.zip
+      dest: /usr/local/bin
+
+- name: unzip the consul
+  unarchive:
+      src: /usr/local/bin/consul_0.9.0_linux_amd64.zip
+      dest: /usr/local/bin
+      remote_src: True
+
+- name: creating configuration directory
+  file:
+      path: /etc/consul.d
+      state: directory
+      mode: 0755
+
+- name: creating data directory
+  file:
+      path: /var/lib/consul
+      state: directory
+      mode: 0755

@@ -1,0 +1,2 @@
+[consul]
+10.10.10.102 ansible_user=jigar ansible_ssh_pass=jigar ansible_become_pass=jigar
