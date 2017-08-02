@@ -1,63 +1,71 @@
 package com.agent;
+
 import com.ecwid.consul.v1.catalog.model.CatalogService;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.ParseException;
 
 import java.io.*;
 import java.net.Socket;
 
-
+import static com.agent.Agent.readFromStream;
 
 /**
  * Created by Jigar on 7/29/2017.
  */
 public class Ping extends Agent{
     final int PING_PORT = 5001;
-    Integer pongServicePort = null;
-    String pongServiceID = null;
-    String pongServiceAddress = null;
+    String pingAgentID = null;
+
+    Integer pongAgentPort = null;
+    String pongAgentID = null;
+    String pongAgentAddress = null;
+
     @Override
     public void service() {
 
-        register(PING_PORT,"Ping");
+        pingAgentID = register(PING_PORT,"Ping");
         CatalogService pongService = null;
 
         while(pongService == null) {
+            //Step 1: Lookup PongAgent
             System.out.println("Looking for PongAgents");
             pongService = findService("Pong");
 
-            //if agent found
-            //  check if it's active; if not then deregister it and get another agent
-            //else sleep for 30 s
             if(pongService != null){
                 try {
-                    pongServiceAddress = pongService.getServiceAddress();
-                    pongServicePort = pongService.getServicePort();
-                    pongServiceID = pongService.getServiceId();
-                    Socket client = new Socket(pongServiceAddress, pongServicePort);
-                    System.out.println("Found PongAgent{id="+pongServiceID+"} at " + pongServiceAddress + " on port " + pongServicePort);
+                    pongAgentAddress = pongService.getServiceAddress();
+                    pongAgentPort = pongService.getServicePort();
+                    pongAgentID = pongService.getServiceId();
+                    //Step 2 : check connection; if the connection is stale then deregister it using IOException
+                    Socket pongClient = new Socket(pongAgentAddress, pongAgentPort);
+                    System.out.println("Found PongAgent{id="+pongAgentID+"} at " + pongAgentAddress + " on port " + pongAgentPort);
 
-                    System.out.println("Sending ping to PongAgent[id="+pongServiceID+" ]" + client.getRemoteSocketAddress());
-                    OutputStream outToServer = client.getOutputStream();
-                    DataOutputStream out = new DataOutputStream(outToServer);
-                    out.writeUTF("ping ");
+                    //Step 3 : prepare message and send it
+                    String pingMessage = "ping";
+                    System.out.println("Sending "+ pingMessage +" to PongAgent[id="+pongAgentID+" ]  " + pongClient.getRemoteSocketAddress());
+                    DataOutputStream dataOutputStream= new DataOutputStream(pongClient.getOutputStream());
+                    Agent.writeToStream(dataOutputStream, pingAgentID, pingMessage);
 
-                    InputStream inFromServer = client.getInputStream();
-                    DataInputStream in = new DataInputStream(inFromServer);
-                    System.out.println("PingAgent[id=]: Received " + in.readUTF()+" from PongAgent[id=]"+pongServiceID);
-                    client.close();
+                    //Step 4: print the response
+                    DataInputStream dataInputStream = new DataInputStream(pongClient.getInputStream());
+                    JSONObject incomingJSON = Agent.readFromStream(dataInputStream);
+                    System.out.println("PingAgent[id="+pingAgentID+"]: Received " + incomingJSON.get("message")+" from PongAgent[id=]"+pongAgentID);
+                    pongClient.close();
 
+                    break;
                 } catch (IOException e) {
                     //service is not available; deregister it
                     System.out.println("deregistrering stale service");
-                    client.agentServiceDeregister(pongService.getServiceId());
+                    consulClient.agentServiceDeregister(pongService.getServiceId());
                     pongService = null;
-                    break;
+                } catch (ParseException e) {
+                    e.printStackTrace();
                 }
-                //perform task
-
-                break;
             }else{
+                //sleep for 30s; if there are no pongAgent
                 try {
-                    Thread.sleep(30000);
+                    //Thread.sleep(30000);
+                    Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

@@ -1,5 +1,8 @@
 package com.agent;
 
+import org.json.simple.JSONObject;
+import org.json.simple.parser.ParseException;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -12,30 +15,38 @@ import java.net.Socket;
 
 public class Pong extends Agent {
     final int PONG_PORT = 5000;
-    ServerSocket pongSocket;
+    ServerSocket pongListenerSocket;
+    String pongAgentID;
     @Override
     public void service() {
         try {
-            //open socket
-            pongSocket = new ServerSocket(PONG_PORT);
+            //open serversocket which listens to incoming request and responds
+            pongListenerSocket = new ServerSocket(PONG_PORT);
             //register with consul
-            register(PONG_PORT, "Pong");
+            pongAgentID = register(PONG_PORT, "Pong");
             //actual implementaion
             while(true){
-                System.out.println("PongAgent[id=] waiting for pings ");
-                Socket server = pongSocket.accept();
+                System.out.println("PongAgent[id="+ pongAgentID +"] waiting for pings ");
+                //Step 1 : Listen to incoming request and parse it
+                Socket pongServer = pongListenerSocket.accept();
 
-                DataInputStream in = new DataInputStream(server.getInputStream());
-                System.out.println("Received "+in.readUTF()+" from PingAgent[id='']");
+                DataInputStream inputStream = new DataInputStream(pongServer.getInputStream());
+                JSONObject incomingRequest = Agent.readFromStream(inputStream);
+                String requestorID = (String) incomingRequest.get("requestor_id");
+                System.out.println("Received "+ incomingRequest.get("message") +" from PingAgent[id='"+ requestorID +" ']");
 
-                System.out.println("Sending pong to PingAgent[id=]");
-                DataOutputStream out = new DataOutputStream(server.getOutputStream());
-                out.writeUTF("pong ");
+                //Step 2: Send request
+                String pongMesssage ="pong";
+                System.out.println("Sending "+pongMesssage+" to PingAgent[id="+requestorID+"]");
+                DataOutputStream objectStream = new DataOutputStream(pongServer.getOutputStream());
+                Agent.writeToStream(objectStream, pongAgentID, pongMesssage);
 
-                server.close();
+                pongServer.close();
                 System.out.println(" ....... ...... ...... ");
             }
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ParseException e) {
             e.printStackTrace();
         }
     }

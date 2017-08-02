@@ -5,12 +5,11 @@ import com.ecwid.consul.v1.QueryParams;
 import com.ecwid.consul.v1.Response;
 import com.ecwid.consul.v1.agent.model.NewService;
 import com.ecwid.consul.v1.catalog.model.CatalogService;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.ParseException;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.InetAddress;
-import java.net.Socket;
 import java.util.List;
 import java.util.Properties;
 import java.util.Random;
@@ -23,7 +22,7 @@ public abstract class Agent {
     private static String consulServer;
     private static Integer consulPort;
     private static String serviceAddress;
-    static ConsulClient client;
+    static ConsulClient consulClient;
     static{
         try {
             setUp();
@@ -31,7 +30,7 @@ public abstract class Agent {
             e.printStackTrace();
         }
     }
-    public static void setUp() throws IOException {
+    private static void setUp() throws IOException {
         try {
             Properties prop = new Properties();
 
@@ -45,7 +44,7 @@ public abstract class Agent {
                 throw new IllegalArgumentException("Set parameters");
             }
 
-            client = new ConsulClient(consulServer, consulPort);
+            consulClient = new ConsulClient(consulServer, consulPort);
         }
         catch(IOException e){
             System.out.println("Improper configuration ");
@@ -60,12 +59,15 @@ public abstract class Agent {
     public String register(int port, String serviceName){
         String uniqueid = getUniqueID(port,serviceName);
 
+
+
+
         NewService newService = new NewService();
         newService.setId(uniqueid);
         newService.setName(serviceName);
         newService.setAddress(serviceAddress);
         newService.setPort(port);
-        Response<Void> response = client.agentServiceRegister(newService);
+        Response<Void> response = consulClient.agentServiceRegister(newService);
         System.out.println(response);
 
         return uniqueid;
@@ -74,7 +76,7 @@ public abstract class Agent {
 
     public CatalogService findService(String serviceToFind){
         CatalogService catalogService = null;
-        Response<List<CatalogService>> lookupResponse = client.getCatalogService(serviceToFind, QueryParams.DEFAULT);
+        Response<List<CatalogService>> lookupResponse = consulClient.getCatalogService(serviceToFind, QueryParams.DEFAULT);
         int responseSize = lookupResponse.getValue().size();
         if(responseSize != 0) {
             //fetch service at random
@@ -83,16 +85,18 @@ public abstract class Agent {
             catalogService = lookupResponse.getValue().get(number);
         }
         return catalogService;
-        /*for(CatalogService service: lookupResponse.getValue()){
-            System.out.println(service.getServiceAddress()+" "+service.getServicePort());
-            boolean isAvailable = service(service.getServiceAddress(),service.getServicePort(),service.getServiceId());
-            if(isAvailable){
-                System.out.println("");
-                break;
-            }else{
-                System.out.println("deregistering : "+service);
-                client.agentServiceDeregister(service.getServiceId());
-            }
-        }*/
+    }
+
+    //utility method to write to socket
+    protected static void writeToStream(DataOutputStream dataOutputStream, String agent_id, String message) throws IOException {
+        Model request = new Model(agent_id, message);
+        dataOutputStream.writeUTF( request.toString() );
+    }
+
+    protected static JSONObject readFromStream(DataInputStream dataInputStream) throws IOException, ParseException {
+        JSONObject incomingRequest = null;
+        String requestString = dataInputStream.readUTF();
+        incomingRequest = Model.convertToJSON(requestString);
+        return incomingRequest;
     }
 }

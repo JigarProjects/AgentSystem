@@ -4,16 +4,16 @@ import com.agent.Pong;
 
 import java.io.IOException;
 
-public class Main {
+public class AgentSystem {
 
     public static void main(String[] args) throws IOException {
         Agent agent = null;
         if(args.length != 0){
             switch ( args[0] ) {
-                case "Pong":
+                case "PongAgent":
                     agent = new Pong();
                     break;
-                case "Ping":
+                case "PingAgent":
                     agent = new Ping();
                     break;
                 default:

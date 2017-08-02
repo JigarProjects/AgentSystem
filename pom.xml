@@ -7,6 +7,8 @@
     <groupId>com.agent</groupId>
     <artifactId>agentsystem</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
     <build>
         <plugins>
             <plugin>
@@ -25,6 +27,13 @@
             <groupId>com.ecwid.consul</groupId>
             <artifactId>consul-api</artifactId>
             <version>1.2.3</version>
+        </dependency>
+
+
+        <dependency>
+            <groupId>com.googlecode.json-simple</groupId>
+            <artifactId>json-simple</artifactId>
+            <version>1.1.1</version>
         </dependency>
     </dependencies>
 
