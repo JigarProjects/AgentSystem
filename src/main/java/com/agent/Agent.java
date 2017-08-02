@@ -18,6 +18,7 @@ import java.util.Random;
  * Created by Jigar on 7/28/2017.
  */
 public abstract class Agent {
+    private static String configurationFilePath= "C:/Users/Jigar/IdeaProjects/agentsystem/config.properties";
     String agent_name;
     private static String consulServer;
     private static Integer consulPort;
@@ -30,12 +31,16 @@ public abstract class Agent {
             e.printStackTrace();
         }
     }
+
+    public static void setConfigurationPath(String filePath){
+        configurationFilePath =  filePath;
+    }
+
     private static void setUp() throws IOException {
         try {
             Properties prop = new Properties();
 
-
-            InputStream input = Agent.class.getClassLoader().getResourceAsStream("config.properties");
+            InputStream input = new FileInputStream(configurationFilePath);
             prop.load(input);
             serviceAddress = InetAddress.getLocalHost().getHostAddress().toString();
             consulServer = prop.getProperty("consul_server");
