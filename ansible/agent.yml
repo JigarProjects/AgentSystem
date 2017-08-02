@@ -1,0 +1,6 @@
+---
+
+- hosts: consul
+  roles:
+   - agent
+
