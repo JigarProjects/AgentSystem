@@ -5,10 +5,12 @@
      name: git
      update_cache: yes
 
-- name: getting the home directory
-  debug: var="{{ ansible_env.HOME}}"
-
 - name: fetching the code
   git:
      repo: https://github.com/JigarProjects/agentsystem.git
-     dest:{{ ansible_env.HOME}}
+     dest: agentSystem
+
+- name: setting run time environment
+  become: yes
+  apt:
+     name: default-jre,default-jdk
