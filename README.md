@@ -20,11 +20,14 @@ Reactive Deregistration:
 Consul has health-cheking feature. There are multiple ways to unable it. To keep things easy, I decided to use reactive deregistration. If pongAgent find stale pingAgent then it deregisters it.
 
 ## How to use it
-Install consul on a machine, as I utilize RESTful web services of Consul make sure it's 8500 port is open.
+I have added ansible role to insall consul on specified machine. 
+As I utilize RESTful web services fire following command:
 
-sudo cosul agent -server -bootstrap-expect=1 -ui -client=PUBLIC_IP -data-dir=/var/lib/consul -config-dir=/etc/consul.d
+~~~
+sudo consul agent -server -bootstrap-expect=1 -ui -client=PUBLIC_IP -data-dir=/var/lib/consul -config-dir=/etc/consul.d
+~~~
 
-You can use this program to start only single agent.
+
 ## Issues
 Consul health check can be utilized to perform active service deregistration.
 

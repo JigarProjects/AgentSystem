@@ -1,0 +1,14 @@
+---
+- name: installing git
+  become: yes
+  apt:
+     name: git
+     update_cache: yes
+
+- name: getting the home directory
+  debug: var="{{ ansible_env.HOME}}"
+
+- name: fetching the code
+  git:
+     repo: https://github.com/JigarProjects/agentsystem.git
+     dest:{{ ansible_env.HOME}}
