@@ -45,6 +45,9 @@ public abstract class Agent {
             serviceAddress = InetAddress.getLocalHost().getHostAddress().toString();
             consulServer = prop.getProperty("consul_server");
             consulPort = Integer.parseInt(prop.getProperty("consul_port"));
+            if (prop.getProperty("serviceAddress")!= null ){
+                serviceAddress = prop.getProperty("serviceAddress");
+            }
             if (consulServer == null) {
                 throw new IllegalArgumentException("Set parameters");
             }
