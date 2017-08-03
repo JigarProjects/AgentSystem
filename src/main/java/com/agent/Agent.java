@@ -18,7 +18,7 @@ import java.util.Random;
  * Created by Jigar on 7/28/2017.
  */
 public abstract class Agent {
-    private static String configurationFilePath= "C:/Users/Jigar/IdeaProjects/agentsystem/config.properties";
+    private static String configurationFilePath= "config.properties";
     String agent_name;
     private static String consulServer;
     private static Integer consulPort;
