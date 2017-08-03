@@ -66,17 +66,12 @@ public abstract class Agent {
     }
     public String register(int port, String serviceName){
         String uniqueid = getUniqueID(port,serviceName);
-
-
-
-
         NewService newService = new NewService();
         newService.setId(uniqueid);
         newService.setName(serviceName);
         newService.setAddress(serviceAddress);
         newService.setPort(port);
         Response<Void> response = consulClient.agentServiceRegister(newService);
-        System.out.println(response);
 
         return uniqueid;
     }
